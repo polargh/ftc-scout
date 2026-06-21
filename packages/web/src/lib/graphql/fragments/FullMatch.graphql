@@ -8,6 +8,8 @@ fragment FullMatch on Match {
     tournamentLevel
     scheduledStartTime
     actualStartTime
+    videoEmbedURL
+    videoClipfarmURL
     scores {
         ...FullMatchScores
     }

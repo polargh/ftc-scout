@@ -30,6 +30,10 @@ export const MatchGQL: GraphQLObjectType = new GraphQLObjectType({
         series: IntTy,
         matchNum: IntTy,
         description: StrTy,
+        videoType: nullTy(StrTy),
+        videoURL: nullTy(StrTy),
+        videoEmbedURL: nullTy(StrTy),
+        videoClipfarmURL: nullTy(StrTy),
         createdAt: DateTimeTy,
         updatedAt: DateTimeTy,
 

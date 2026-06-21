@@ -38,6 +38,16 @@
             dispatch("close");
         }}
     >
+        {#if match.videoEmbedURL}
+            <div class="video">
+                <iframe
+                    src={match.videoEmbedURL}
+                    title="Video for match {match.description}"
+                    allow="autoplay; fullscreen; picture-in-picture"
+                    allowfullscreen
+                />
+            </div>
+        {/if}
         {#if trad}
             <TradScores scores={trad} {matchDescription} teams={match.teams} {level} />
         {:else if remote}
@@ -50,3 +60,19 @@
         {/if}
     </Modal>
 {/if}
+
+<style>
+    .video {
+        width: min(800px, 80vw);
+        aspect-ratio: 16 / 9;
+        margin-bottom: var(--lg-gap);
+    }
+
+    iframe {
+        width: 100%;
+        border-radius: 15px;
+
+        height: 100%;
+        border: 0;
+    }
+</style>

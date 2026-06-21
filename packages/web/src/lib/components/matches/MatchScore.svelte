@@ -38,6 +38,8 @@
     import { matchTimeTip } from "../../util/tippy";
     import { getContext } from "svelte";
     import { SHOW_MATCH_SCORE, type ShowMatchFn } from "./MatchTable.svelte";
+    // import { faPlay } from "@fortawesome/free-solid-svg-icons";
+    // import Fa from "svelte-fa";
 
     export let match: FullMatchFragment;
     export let timeZone: string;
@@ -85,7 +87,20 @@
         class:blue={winner == Alliance.Blue}
         class:tie={winner == "Tie"}
     >
-        {match.description}
+        <!-- {#if match.videoClipfarmURL}
+            <a
+                class="play"
+                href={match.videoClipfarmURL}
+                target="_blank"
+                rel="noopener noreferrer"
+                aria-label="Watch {match.description} on Clipfarm"
+                title="Watch on Clipfarm"
+                on:click|stopPropagation
+            >
+                <Fa icon={faPlay} size="xs" />
+            </a>
+        {/if} -->
+        <span>{match.description}</span>
     </div>
     <div class="score">
         {#if match.scores == undefined}
@@ -141,9 +156,49 @@
     }
 
     .description {
+        display: flex;
+        align-items: center;
+        gap: var(--sm-gap);
         padding-left: var(--md-gap);
         font-weight: bold;
         color: var(--grayed-out-text-color);
+    }
+
+    .play {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        flex: 0 0 1.25rem;
+        width: 1.25rem;
+        height: 1.25rem;
+        margin-right: 0.35rem;
+
+        border: 1px solid #636466;
+        border-radius: 4px;
+        background: #636466;
+        color: #ffffff;
+        line-height: 1;
+        text-decoration: none;
+
+        transition: color 0.12s ease, background-color 0.12s ease, border-color 0.12s ease;
+    }
+
+    .play:link,
+    .play:visited,
+    .play:active {
+        color: #ffffff;
+    }
+
+    .play:hover,
+    .play:focus-visible {
+        border-color: #4a4e51;
+        background: #4a4e51;
+        color: #ffffff;
+        outline: none;
+    }
+
+    .play:hover {
+        text-decoration: none;
     }
 
     .minus {

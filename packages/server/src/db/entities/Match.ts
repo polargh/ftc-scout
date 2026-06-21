@@ -58,6 +58,18 @@ export class Match extends BaseEntity {
     @Column("smallint")
     series!: number;
 
+    @Column({ type: "varchar", nullable: true })
+    videoType!: string | null;
+
+    @Column({ type: "varchar", nullable: true })
+    videoURL!: string | null;
+
+    @Column({ type: "varchar", nullable: true })
+    videoEmbedURL!: string | null;
+
+    @Column({ type: "varchar", nullable: true })
+    videoClipfarmURL!: string | null;
+
     get matchNum(): number {
         return this.id % 1000;
     }
@@ -116,6 +128,10 @@ export class Match extends BaseEntity {
                 : null,
             tournamentLevel,
             series,
+            videoType: null,
+            videoURL: null,
+            videoEmbedURL: null,
+            videoClipfarmURL: null,
         } satisfies DeepPartial<Match>);
     }
 

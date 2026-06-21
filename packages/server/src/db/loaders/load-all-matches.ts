@@ -25,6 +25,7 @@ import {
 import { exit } from "process";
 import { IS_DEV } from "../../constants";
 import { newMatchesKey, pubsub } from "../../graphql/resolvers/pubsub";
+import { clipsByFtcScoutMatchId, getClipfarmEvent } from "../../clipfarm/get-event-clips";
 
 const IGNORED_MATCHES = [
     //cSpell:disable
@@ -56,11 +57,24 @@ export async function loadAllMatches(season: Season, loadType: LoadType) {
         if (event.remote && !DESCRIPTORS[season].hasRemote) continue;
 
         try {
-            let [matches, scores, teams] = await Promise.all([
+            let [matches, scores, teams, ClipfarmEvent] = await Promise.all([
                 getMatches(season, event.code),
                 getMatchScores(season, event.code),
                 getTeams(season, event.code),
+                getClipfarmEvent(
+                    new Date(event.start).getUTCFullYear(),
+                    event.divisionCode ?? event.code
+                ),
             ]);
+
+            const clips =
+                ClipfarmEvent?.divisions.find((division) => division.division.code === event.code)
+                    ?.clips ?? [];
+            const matchIdentities = matches.map((match) => {
+                const dbMatch = Match.fromApi(match, event, false, matches);
+                return { id: dbMatch.id, tournamentLevel: dbMatch.tournamentLevel };
+            });
+            const clipsByMatchId = clipsByFtcScoutMatchId(clips, matchIdentities);
 
             let allDbMatches: Match[] = [];
             let allDbScores: MatchScore[] = [];
@@ -72,6 +86,13 @@ export async function loadAllMatches(season: Season, loadType: LoadType) {
                 let theseScores = findScores(match, scores);
                 let hasBeenPlayed = !!theseScores.length;
                 let dbMatch = Match.fromApi(match, event, hasBeenPlayed, matches);
+                const clip = clipsByMatchId.get(dbMatch.id);
+                if (clip) {
+                    dbMatch.videoType = clip.type;
+                    dbMatch.videoURL = clip.url;
+                    dbMatch.videoEmbedURL = clip.embedUrl;
+                    dbMatch.videoClipfarmURL = clip.openInClipfarmUrl;
+                }
                 let dbTmps = TeamMatchParticipation.fromApi(match.teams, dbMatch, event.remote);
                 let dbScores =
                     event.remote && dbTmps[0].noShow
@@ -156,7 +177,7 @@ async function eventsToFetch(season: Season, loadType: LoadType) {
     if (loadType == LoadType.Full) {
         return DATA_SOURCE.getRepository(Event)
             .createQueryBuilder("e")
-            .select(["e.season", "e.code", "e.remote", "e.timezone"])
+            .select(["e.season", "e.code", "e.divisionCode", "e.remote", "e.timezone", "e.start"])
             .distinct(true)
             .leftJoin(Match, "m", "e.season = m.event_season AND e.code = m.event_code")
             .leftJoin(
@@ -172,7 +193,7 @@ async function eventsToFetch(season: Season, loadType: LoadType) {
     } else {
         return DATA_SOURCE.getRepository(Event)
             .createQueryBuilder("e")
-            .select(["e.season", "e.code", "e.remote", "e.timezone"])
+            .select(["e.season", "e.code", "e.divisionCode", "e.remote", "e.timezone", "e.start"])
             .distinct(true)
             .where("season = :season", { season })
             .andWhere("start <= (NOW() at time zone timezone)::date")
